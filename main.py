@@ -79,6 +79,11 @@ def music_load():
                 }
     except FileNotFoundError:
         print(f"Error: The file {music_folder_path}/music.json was not found.")
+        with open(f"{music_folder_path}/music.json", "w" ) as music_file:
+            music = {
+                0 : {"name" : "lalala",
+                    "path" : 'unknown'}
+                }
     except json.JSONDecodeError as e:
         music = {
                 0 : {"name" : "lalala",
