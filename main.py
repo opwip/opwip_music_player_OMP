@@ -14,21 +14,23 @@ root.geometry("800x800")
 song_progress_current = tk.StringVar
 song_progress_full = tk.StringVar
 song_length = tk.IntVar()
+current_song_index = tk.IntVar()
 
 def update_progress():
     if mixer.music.get_busy():
+        print('asd')
         # ВАЖНО ВАЖНО 💀💀💀💀💀💀💀💀💀💀 !!!!!!! ЗДЕЛАЙ ЄТО НА ДРУГОЙ ПОТОК ЕБЛАН
         # ⬆⬆⬆⬆⬆👆👆👆👆 НЕТ НЕ НАДО ДИБИЛОИД ЕБУЧИЙ
         music_progress.config(text=f'{int(mixer.music.get_pos() / 1000 // 60)}:{int(round(mixer.music.get_pos() / 1000 % 60, 0))} / {int(song_length.get() // 60)}:{int(round(song_length.get() % 60, 0))}')
-    if f'{int(mixer.music.get_pos() / 1000 // 60)}:{int(round(mixer.music.get_pos() / 1000 % 60, 0))}' == f'{int(song_length.get() // 60)}:{int(round(song_length.get() % 60, 0))}':
-        pass
     root.after(1000, update_progress)
 
 
 
 update_progress()
-def play_music(song_path):
+def play_music(song_info):
     """Play the selected music file."""
+    label_file.config(text=song_info["name"])
+    song_path = song_info["path"]
     audio = mixer.Sound(song_path)
     song_length.set(audio.get_length()) 
     if song_path:
@@ -52,6 +54,20 @@ def stop_music():
     mixer.music.stop()
     label_status.config(text="Stopped")
 
+def play_next():
+    if list(music_list.keys())[current_song_index.get()] ==  list(music_list.keys())[-1]:
+        current_song_index.set(0)
+        song_id = list(music_list.keys())[current_song_index.get()]
+        song_info = music_list[song_id]
+        stop_music()
+        play_music(song_info)
+    else:
+        song_id = list(music_list.keys())[current_song_index.get() + 1]
+        song_info = music_list[song_id]
+        current_song_index.set(current_song_index.get() + 1)
+        stop_music()
+        play_music(song_info)
+
 frame_controls = tk.Frame(root)
 frame_controls.pack(pady=20)
 
@@ -71,7 +87,6 @@ def music_load():
             data = json.load(music_file)
             if data:
                 music = data
-                print(data)
             else:
                 music = {
                 0 : {"name" : "lalala",
@@ -114,26 +129,40 @@ def add_music():
     with open("music/music.json", "w" ) as music_file:
         json.dump(music_list, music_file, indent=4)
 
-print(music_list)
+
+def delete_music():
+    selected_index = loaded_music.curselection()
+    if selected_index:
+        song_id = list(music_list.keys())[selected_index[0]]
+        del music_list[song_id]
+        loaded_music.delete(selected_index[0])
+        with open("music/music.json", "w" ) as music_file:
+            json.dump(music_list, music_file, indent=4)
+
+
 def on_select(event):
     # Get the selected item index
     selected_index = loaded_music.curselection()
     if selected_index:
+        current_song_index.set(selected_index[0])
         # Get the ID of the selected song
         song_id = list(music_list.keys())[selected_index[0]]
         song_info = music_list[song_id]
         # Load the song using the path
         try:
-            label_file.config(text=song_info["name"])
-            play_music(song_info["path"])
+            play_music(song_info)
         except FileNotFoundError:
-            del music_list[song_id]
-            loaded_music.delete(selected_index[0])
-            with open("music/music.json", "w" ) as music_file:
-                json.dump(music_list, music_file, indent=4)
+            delete_music()
 
 button_music_add = tk.Button(frame_controls, text="add_music", command=add_music)
-button_music_add.grid(row=2, column=0, columnspan=2, pady=20)
+button_music_add.grid(row=2, column=0, pady=20)
+
+button_delete_music = tk.Button(frame_controls, text="delete_music", command=delete_music)
+button_delete_music.grid(row=2, column=6, padx=20, pady=20)
+
+button_play_next = tk.Button(frame_controls, text="play next", command=play_next)
+button_play_next.grid(row=2, column=4, pady=20)
+
 
 loaded_music = tk.Listbox(root, width=50, height=10)
 loaded_music.pack(pady=10)
