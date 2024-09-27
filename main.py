@@ -15,16 +15,10 @@ song_progress_current = tk.StringVar
 song_progress_full = tk.StringVar
 song_length = tk.IntVar()
 current_song_index = tk.IntVar()
+paused = tk.BooleanVar()
 
-def update_progress():
-    if mixer.music.get_busy():
-        print('asd')
-        # ВАЖНО ВАЖНО 💀💀💀💀💀💀💀💀💀💀 !!!!!!! ЗДЕЛАЙ ЄТО НА ДРУГОЙ ПОТОК ЕБЛАН
-        # ⬆⬆⬆⬆⬆👆👆👆👆 НЕТ НЕ НАДО ДИБИЛОИД ЕБУЧИЙ
-        music_progress.config(text=f'{int(mixer.music.get_pos() / 1000 // 60)}:{int(round(mixer.music.get_pos() / 1000 % 60, 0))} / {int(song_length.get() // 60)}:{int(round(song_length.get() % 60, 0))}')
-    root.after(1000, update_progress)
-
-update_progress()
+first = tk.BooleanVar()
+first.set(True)
 
 def play_music(song_info):
     """Play the selected music file."""
@@ -37,15 +31,20 @@ def play_music(song_info):
         mixer.music.load(song_path)
         mixer.music.play()
         label_status.config(text="Playing")
+        if first.get():
+            update_progress()
+            first.set(False)
 
 def pause_music():
     """Pause the currently playing music."""
     mixer.music.pause()
+    paused.set(True)
     label_status.config(text="Paused")
 
 def resume_music():
     """Resume the paused music."""
     mixer.music.unpause()
+    paused.set(False)
     label_status.config(text="Playing")
 
 def stop_music():
@@ -89,7 +88,6 @@ frame_controls.pack(pady=20)
 button_play = tk.Button(frame_controls, text="Play")
 button_pause = tk.Button(frame_controls, text="Pause", command=pause_music)
 button_resume = tk.Button(frame_controls, text="Resume", command=resume_music)
-button_stop = tk.Button(frame_controls, text="Stop", command=stop_music)
 volume_scale = tk.Scale(root, from_=0, to=100, orient="horizontal", label="Volume", command=lambda v: mixer.music.set_volume(int(v) / 100))
 volume_scale.pack(pady=20)
 volume_scale.set(25)  # Set default volume to 25%
@@ -197,7 +195,6 @@ loaded_music.bind('<<ListboxSelect>>', on_select)
 button_play.grid(row=0, column=1, padx=10)
 button_pause.grid(row=0, column=2, padx=10)
 button_resume.grid(row=0, column=3, padx=10)
-button_stop.grid(row=0, column=4, padx=10)
 
 
 music_progress = tk.Label(root)
@@ -209,6 +206,15 @@ label_file.pack(pady=10)
 
 label_status = tk.Label(root, text="Welcome to opwip`s music player", font=("Arial", 12), fg="green")
 label_status.pack(pady=10)
+
+def update_progress():
+    if mixer.music.get_busy():
+        # ВАЖНО ВАЖНО 💀💀💀💀💀💀💀💀💀💀 !!!!!!! ЗДЕЛАЙ ЄТО НА ДРУГОЙ ПОТОК ЕБЛАН
+        # ⬆⬆⬆⬆⬆👆👆👆👆 НЕТ НЕ НАДО ДИБИЛОИД ЕБУЧИЙ
+        music_progress.config(text=f'{int(mixer.music.get_pos() / 1000 // 60)}:{int(round(mixer.music.get_pos() / 1000 % 60, 0))} / {int(song_length.get() // 60)}:{int(round(song_length.get() % 60, 0))}')
+    elif not paused.get():
+        play_next()
+    root.after(1000, update_progress)
 
 
 root.mainloop()
