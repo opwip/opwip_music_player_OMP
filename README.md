@@ -1,2 +1,2 @@
-# opwip_music_baddy_player
+# opwip_music_player OMP
  I am tired of using sporify
