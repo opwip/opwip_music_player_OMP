@@ -3,6 +3,8 @@ from tkinter import filedialog
 from pygame import mixer
 import os
 import json
+from mutagen.easyid3 import EasyID3 
+from mutagen.mp3 import MP3  
 
 mixer.init()
 
@@ -27,6 +29,7 @@ def play_music(song_info):
     audio = mixer.Sound(song_path)
     song_length.set(audio.get_length()) 
     if song_path:
+        paused.set(False)
         stop_music()
         mixer.music.load(song_path)
         mixer.music.play()
@@ -49,6 +52,7 @@ def resume_music():
 
 def stop_music():
     """Stop the music playback."""
+    paused.set(True)
     mixer.music.stop()
     label_status.config(text="Stopped")
 
@@ -88,6 +92,7 @@ frame_controls.pack(pady=20)
 button_play = tk.Button(frame_controls, text="Play")
 button_pause = tk.Button(frame_controls, text="Pause", command=pause_music)
 button_resume = tk.Button(frame_controls, text="Resume", command=resume_music)
+
 volume_scale = tk.Scale(root, from_=0, to=100, orient="horizontal", label="Volume", command=lambda v: mixer.music.set_volume(int(v) / 100))
 volume_scale.pack(pady=20)
 volume_scale.set(25)  # Set default volume to 25%
@@ -128,7 +133,26 @@ music_list = music_load()
 def add_music():
     file = filedialog.askopenfilename(filetypes=[("Audio Files", "*.mp3 *.wav")])
 
-    song_info = {'name' : os.path.basename(file.title()),
+    def get_name(filet):
+        try:
+            audio = MP3(filet, ID3=EasyID3)
+
+            # Retrieve artist and title from the metadata
+            artist = audio.get('artist', ['Unknown Artist'])[0]
+            title = audio.get('title', ['Unknown Title'])[0]
+
+            print(f"Artist: {artist}")
+            print(f"Title: {title}")
+            if title == 'Unknown Title' and artist == 'Unknown Artist':
+                if os.path.basename(filet.title()).lower() == "audio.mp3":
+                    print(os.path.dirname(filet))
+                    return os.path.dirname(filet).split("/")[-1]
+                return os.path.basename(filet.title())
+            return f"{title} by {artist}"
+        except:
+            return os.path.basename(filet.title())
+        
+    song_info = {'name' : get_name(file),
                 "path" : file.title()}
 
     for key,value in music_list.items():
@@ -148,6 +172,7 @@ def delete_music():
     if selected_index:
         song_id = list(music_list.keys())[selected_index[0]]
         del music_list[song_id]
+        stop_music()
         loaded_music.delete(selected_index[0])
         with open("music/music.json", "w" ) as music_file:
             json.dump(music_list, music_file, indent=4)
@@ -207,11 +232,17 @@ label_file.pack(pady=10)
 label_status = tk.Label(root, text="Welcome to opwip`s music player", font=("Arial", 12), fg="green")
 label_status.pack(pady=10)
 
+def format_time_display(seconds):
+    if seconds < 10:
+        return f"0{seconds}"
+    return seconds
+
 def update_progress():
     if mixer.music.get_busy():
         # ВАЖНО ВАЖНО 💀💀💀💀💀💀💀💀💀💀 !!!!!!! ЗДЕЛАЙ ЄТО НА ДРУГОЙ ПОТОК ЕБЛАН
         # ⬆⬆⬆⬆⬆👆👆👆👆 НЕТ НЕ НАДО ДИБИЛОИД ЕБУЧИЙ
-        music_progress.config(text=f'{int(mixer.music.get_pos() / 1000 // 60)}:{int(round(mixer.music.get_pos() / 1000 % 60, 0))} / {int(song_length.get() // 60)}:{int(round(song_length.get() % 60, 0))}')
+        # Да я БиЛичностная личность, проблемы?
+        music_progress.config(text=f'{int(mixer.music.get_pos() / 1000 // 60)}:{format_time_display(int(round(mixer.music.get_pos() / 1000 % 60, 0)))} / {int(song_length.get() // 60)}:{format_time_display(int(round(song_length.get() % 60, 0)))}')
     elif not paused.get():
         play_next()
     root.after(1000, update_progress)
