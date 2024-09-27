@@ -12,6 +12,7 @@ mixer.init()
 root = tk.Tk()
 root.title("opwip`s music player")
 root.geometry("800x800")
+root.config(background='gray')
 
 song_progress_current = tk.StringVar
 song_progress_full = tk.StringVar
