@@ -22,6 +22,8 @@ paused = tk.BooleanVar()
 first = tk.BooleanVar()
 first.set(True)
 
+# Functions!!!
+
 def play_music(song_info):
     """Play the selected music file."""
     label_file.config(text=song_info["name"])
@@ -84,20 +86,6 @@ def play_previous():
         stop_music()
         play_music(song_info)
 
-
-
-frame_controls = tk.Frame(root)
-frame_controls.pack(pady=20)
-
-button_play = tk.Button(frame_controls, text="Play")
-button_pause = tk.Button(frame_controls, text="Pause", command=pause_music)
-button_resume = tk.Button(frame_controls, text="Resume", command=resume_music)
-
-volume_scale = tk.Scale(root, from_=0, to=100, orient="horizontal", label="Volume", command=lambda v: mixer.music.set_volume(int(v) / 100))
-volume_scale.pack(pady=20)
-volume_scale.set(25)  # Set default volume to 25%
-
-
 def music_load():
     music_folder_path = 'music/'
     try:
@@ -144,12 +132,12 @@ def add_music():
             print(f"Artist: {artist}")
             print(f"Title: {title}")
             if title == 'Unknown Title' and artist == 'Unknown Artist':
-                if os.path.basename(filet.title()).lower() == "audio.mp3":
+                if os.path.basename(filet.title()).lower() == "audio.mp3" or len(os.path.basename(filet.title()).lower().split('.')[0]) < 4 :
                     print(os.path.dirname(filet))
                     return os.path.dirname(filet).split("/")[-1]
                 return os.path.basename(filet.title())
             return f"{title} by {artist}"
-        except:
+        except NameError:
             return os.path.basename(filet.title())
         
     song_info = {'name' : get_name(file),
@@ -166,7 +154,6 @@ def add_music():
     with open("music/music.json", "w" ) as music_file:
         json.dump(music_list, music_file, indent=4)
 
-
 def delete_music():
     selected_index = loaded_music.curselection()
     if selected_index:
@@ -176,7 +163,6 @@ def delete_music():
         loaded_music.delete(selected_index[0])
         with open("music/music.json", "w" ) as music_file:
             json.dump(music_list, music_file, indent=4)
-
 
 def on_select(event):
     # Get the selected item index
@@ -191,6 +177,18 @@ def on_select(event):
             play_music(song_info)
         except FileNotFoundError:
             delete_music()
+
+# Buttons to press and not only them !!!!
+frame_controls = tk.Frame(root)
+frame_controls.pack(pady=20)
+
+
+button_pause = tk.Button(frame_controls, text="Pause", command=pause_music)
+button_resume = tk.Button(frame_controls, text="Resume", command=resume_music)
+
+volume_scale = tk.Scale(root, from_=0, to=100, orient="horizontal", label="Volume", command=lambda v: mixer.music.set_volume(int(v) / 100))
+volume_scale.pack(pady=20)
+volume_scale.set(25)  # Set default volume to 25%
 
 button_music_add = tk.Button(frame_controls, text="add_music", command=add_music)
 button_music_add.grid(row=2, column=0, padx=20, pady=20)
@@ -207,7 +205,6 @@ button_play_next.grid(row=2, column=4, padx=20, pady=20)
 button_play_prev = tk.Button(frame_controls, text="play prev", command=play_previous)
 button_play_prev.grid(row=2, column=2, padx=20, pady=20)
 
-
 loaded_music = tk.Listbox(root, width=50, height=10)
 loaded_music.pack(pady=10)
 
@@ -216,18 +213,14 @@ for song_id, song_info in music_list.items():
 
 loaded_music.bind('<<ListboxSelect>>', on_select)
 
-
-button_play.grid(row=0, column=1, padx=10)
 button_pause.grid(row=0, column=2, padx=10)
 button_resume.grid(row=0, column=3, padx=10)
-
 
 music_progress = tk.Label(root)
 music_progress.pack(pady=10)
 
 label_file = tk.Label(root, text="No file loaded", font=("Arial", 12))
 label_file.pack(pady=10)
-
 
 label_status = tk.Label(root, text="Welcome to opwip`s music player", font=("Arial", 12), fg="green")
 label_status.pack(pady=10)
