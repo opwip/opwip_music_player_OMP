@@ -24,9 +24,8 @@ def update_progress():
         music_progress.config(text=f'{int(mixer.music.get_pos() / 1000 // 60)}:{int(round(mixer.music.get_pos() / 1000 % 60, 0))} / {int(song_length.get() // 60)}:{int(round(song_length.get() % 60, 0))}')
     root.after(1000, update_progress)
 
-
-
 update_progress()
+
 def play_music(song_info):
     """Play the selected music file."""
     label_file.config(text=song_info["name"])
@@ -67,6 +66,22 @@ def play_next():
         current_song_index.set(current_song_index.get() + 1)
         stop_music()
         play_music(song_info)
+
+def play_previous():
+    if list(music_list.keys())[current_song_index.get()] ==  list(music_list.keys())[0]:
+        song_id = list(music_list.keys())[-1]
+        song_info = music_list[song_id]
+        current_song_index.set(len(list(music_list.keys())) - 1)
+        stop_music()
+        play_music(song_info)
+    else:
+        song_id = list(music_list.keys())[current_song_index.get() - 1]
+        song_info = music_list[song_id]
+        current_song_index.set(current_song_index.get() - 1)
+        stop_music()
+        play_music(song_info)
+
+
 
 frame_controls = tk.Frame(root)
 frame_controls.pack(pady=20)
@@ -155,13 +170,19 @@ def on_select(event):
             delete_music()
 
 button_music_add = tk.Button(frame_controls, text="add_music", command=add_music)
-button_music_add.grid(row=2, column=0, pady=20)
+button_music_add.grid(row=2, column=0, padx=20, pady=20)
 
 button_delete_music = tk.Button(frame_controls, text="delete_music", command=delete_music)
 button_delete_music.grid(row=2, column=6, padx=20, pady=20)
 
 button_play_next = tk.Button(frame_controls, text="play next", command=play_next)
-button_play_next.grid(row=2, column=4, pady=20)
+button_play_next.grid(row=2, column=4, padx=20, pady=20)
+
+button_play_next = tk.Button(frame_controls, text="play next", command=play_next)
+button_play_next.grid(row=2, column=4, padx=20, pady=20)
+
+button_play_prev = tk.Button(frame_controls, text="play prev", command=play_previous)
+button_play_prev.grid(row=2, column=2, padx=20, pady=20)
 
 
 loaded_music = tk.Listbox(root, width=50, height=10)
