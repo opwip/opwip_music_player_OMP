@@ -31,8 +31,8 @@ def play_music(song_info):
     audio = mixer.Sound(song_path)
     song_length.set(audio.get_length()) 
     if song_path:
-        paused.set(False)
         stop_music()
+        paused.set(False)
         mixer.music.load(song_path)
         mixer.music.play()
         label_status.config(text="Playing")
