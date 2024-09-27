@@ -5,6 +5,7 @@ import os
 import json
 from mutagen.easyid3 import EasyID3 
 from mutagen.mp3 import MP3  
+import random
 
 mixer.init()
 
@@ -19,6 +20,8 @@ song_progress_full = tk.StringVar
 song_length = tk.IntVar()
 current_song_index = tk.IntVar()
 paused = tk.BooleanVar()
+random_shuffle_toggle = tk.BooleanVar()
+random_shuffle_toggle.set(False)
 
 first = tk.BooleanVar()
 first.set(True)
@@ -60,33 +63,47 @@ def stop_music():
     label_status.config(text="Stopped")
 
 def play_next():
-    if list(music_list.keys())[current_song_index.get()] ==  list(music_list.keys())[-1]:
-        current_song_index.set(0)
-        song_id = list(music_list.keys())[current_song_index.get()]
-        song_info = music_list[song_id]
-        stop_music()
-        play_music(song_info)
+    if random_shuffle_toggle.get():
+        random_music()
     else:
-        song_id = list(music_list.keys())[current_song_index.get() + 1]
-        song_info = music_list[song_id]
-        current_song_index.set(current_song_index.get() + 1)
-        stop_music()
-        play_music(song_info)
+        if list(music_list.keys())[current_song_index.get()] ==  list(music_list.keys())[-1]:
+            current_song_index.set(0)
+            song_id = list(music_list.keys())[current_song_index.get()]
+            song_info = music_list[song_id]
+            stop_music()
+            play_music(song_info)
+        else:
+            song_id = list(music_list.keys())[current_song_index.get() + 1]
+            song_info = music_list[song_id]
+            current_song_index.set(current_song_index.get() + 1)
+            stop_music()
+            play_music(song_info)
 
 def play_previous():
-    if list(music_list.keys())[current_song_index.get()] ==  list(music_list.keys())[0]:
-        song_id = list(music_list.keys())[-1]
-        song_info = music_list[song_id]
-        current_song_index.set(len(list(music_list.keys())) - 1)
-        stop_music()
-        play_music(song_info)
+    if random_shuffle_toggle.get():
+        random_music()
     else:
-        song_id = list(music_list.keys())[current_song_index.get() - 1]
-        song_info = music_list[song_id]
-        current_song_index.set(current_song_index.get() - 1)
-        stop_music()
-        play_music(song_info)
+        if list(music_list.keys())[current_song_index.get()] ==  list(music_list.keys())[0]:
+            song_id = list(music_list.keys())[-1]
+            song_info = music_list[song_id]
+            current_song_index.set(len(list(music_list.keys())) - 1)
+            stop_music()
+            play_music(song_info)
+        else:
+            song_id = list(music_list.keys())[current_song_index.get() - 1]
+            song_info = music_list[song_id]
+            current_song_index.set(current_song_index.get() - 1)
+            stop_music()
+            play_music(song_info)
 
+def random_music():
+    random_index = random.randrange(0, len(list(music_list.keys())) - 1)
+    current_song_index.set(random_index)
+    song_id = list(music_list.keys())[current_song_index.get()]
+    song_info = music_list[song_id]
+    stop_music()
+    play_music(song_info)
+    
 def music_load():
     try:
         with open("music.json", "r" ) as music_file:
@@ -185,6 +202,8 @@ frame_controls.pack(pady=20)
 
 button_pause = tk.Button(frame_controls, text="Pause", command=pause_music)
 button_resume = tk.Button(frame_controls, text="Resume", command=resume_music)
+button_random_toggle = tk.Checkbutton(frame_controls, text='Random toggle', variable=random_shuffle_toggle)
+button_random_toggle.grid(row=0, column=4       )
 
 volume_scale = tk.Scale(root, from_=0, to=100, orient="horizontal", label="Volume", command=lambda v: mixer.music.set_volume(int(v) / 100))
 volume_scale.pack(pady=20)
@@ -204,6 +223,10 @@ button_play_next.grid(row=2, column=4, padx=20, pady=20)
 
 button_play_prev = tk.Button(frame_controls, text="play prev", command=play_previous)
 button_play_prev.grid(row=2, column=2, padx=20, pady=20)
+
+button_random = tk.Button(frame_controls, text="random", command=random_music)
+button_random.grid(row=2, column=3, padx=20, pady=20)
+
 
 loaded_music = tk.Listbox(root, width=50, height=10)
 loaded_music.pack(pady=10)
@@ -237,7 +260,10 @@ def update_progress():
         # Да я БиЛичностная личность, проблемы?
         music_progress.config(text=f'{int(mixer.music.get_pos() / 1000 // 60)}:{format_time_display(int(round(mixer.music.get_pos() / 1000 % 60, 0)))} / {int(song_length.get() // 60)}:{format_time_display(int(round(song_length.get() % 60, 0)))}')
     elif not paused.get():
-        play_next()
+        if random_shuffle_toggle.get():
+            random_music()
+        else:
+            play_next()
     root.after(1000, update_progress)
 
 
