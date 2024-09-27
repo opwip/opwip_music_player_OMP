@@ -6,6 +6,7 @@ import json
 from mutagen.easyid3 import EasyID3 
 from mutagen.mp3 import MP3  
 import random
+import time
 
 mixer.init()
 
@@ -96,13 +97,27 @@ def play_previous():
             stop_music()
             play_music(song_info)
 
+random_index_list = []
+
 def random_music():
     random_index = random.randrange(0, len(list(music_list.keys())) - 1)
-    current_song_index.set(random_index)
-    song_id = list(music_list.keys())[current_song_index.get()]
-    song_info = music_list[song_id]
-    stop_music()
-    play_music(song_info)
+    if random_index in random_index_list:
+        time.sleep(0.0001)
+        random_music()
+    else:
+        song_id = list(music_list.keys())[current_song_index.get()]
+        song_info = music_list[song_id]
+        if len(random_index_list) < 6:
+            random_index_list.append(random_index)
+        else:
+            random_index_list.reverse()
+            random_index_list.pop()
+            random_index_list.reverse()
+            random_index_list.append(random_index)
+        current_song_index.set(random_index)
+        print(random_index_list)
+        stop_music()
+        play_music(song_info)
     
 def music_load():
     try:
