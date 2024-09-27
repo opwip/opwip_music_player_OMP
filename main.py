@@ -88,9 +88,8 @@ def play_previous():
         play_music(song_info)
 
 def music_load():
-    music_folder_path = 'music/'
     try:
-        with open(f"{music_folder_path}/music.json", "r" ) as music_file:
+        with open("music.json", "r" ) as music_file:
             data = json.load(music_file)
             if data:
                 music = data
@@ -100,8 +99,8 @@ def music_load():
                     "path" : 'unknown'}
                 }
     except FileNotFoundError:
-        print(f"Error: The file {music_folder_path}/music.json was not found.")
-        with open(f"{music_folder_path}/music.json", "w" ) as music_file:
+        print("Error: The file music.json was not found.")
+        with open("music.json", "w" ) as music_file:
             music = {
                 0 : {"name" : "lalala",
                     "path" : 'unknown'}
@@ -152,7 +151,7 @@ def add_music():
     
     loaded_music.insert(tk.END, song_info["name"])
 
-    with open("music/music.json", "w" ) as music_file:
+    with open("music.json", "w" ) as music_file:
         json.dump(music_list, music_file, indent=4)
 
 def delete_music():
@@ -162,7 +161,7 @@ def delete_music():
         del music_list[song_id]
         stop_music()
         loaded_music.delete(selected_index[0])
-        with open("music/music.json", "w" ) as music_file:
+        with open("music.json", "w" ) as music_file:
             json.dump(music_list, music_file, indent=4)
 
 def on_select(event):
