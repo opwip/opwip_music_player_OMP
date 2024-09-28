@@ -187,12 +187,12 @@ def add_music():
         json.dump(music_list, music_file, indent=4)
 
 def delete_music():
-    selected_index = loaded_music.curselection()
+    selected_index = current_song_index.get()
     if selected_index:
-        song_id = list(music_list.keys())[selected_index[0]]
+        song_id = list(music_list.keys())[selected_index]
         del music_list[song_id]
         stop_music()
-        loaded_music.delete(selected_index[0])
+        loaded_music.delete(selected_index)
         with open("music.json", "w" ) as music_file:
             json.dump(music_list, music_file, indent=4)
 
